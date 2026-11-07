@@ -1,87 +1,249 @@
-import random
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>大樂透智慧選號器 - 農曆版</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+        }
 
-def is_good_combination(numbers):
-    """檢查號碼組合是否符合常見的統計分佈"""
-    total_sum = sum(numbers)
-    if not (115 <= total_sum <= 185):
-        return False
+        /* 彩球立體質感 */
+        .lotto-ball {
+            background: radial-gradient(circle at 30% 30%, #fef08a, #eab308 70%, #a16207);
+            text-shadow: 1px 1px 0px rgba(255,255,255,0.5);
+            box-shadow: 
+                inset -2px -2px 6px rgba(0,0,0,0.2),
+                inset 2px 2px 6px rgba(255,255,255,0.7),
+                2px 4px 5px rgba(0,0,0,0.15);
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.5s ease-out forwards;
+            opacity: 0;
+            transform: translateY(10px);
+        }
 
-    odd_count = sum(1 for n in numbers if n % 2 != 0)
-    if odd_count not in [2, 3, 4]:
-        return False
+        @keyframes fadeIn {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen p-4 sm:p-8">
 
-    high_count = sum(1 for n in numbers if n >= 25)
-    if high_count not in [2, 3, 4]:
-        return False
+    <div class="max-w-3xl mx-auto">
+        <!-- 標題區 -->
+        <header class="text-center mb-10">
+            <h1 class="text-4xl font-extrabold text-slate-800 mb-2 tracking-tight">大樂透智慧選號</h1>
+            <p class="text-slate-500">結合「統計學過濾」與「農曆日期靈感」的選號神器</p>
+        </header>
 
-    return True
-
-def get_lunar_lucky_numbers(lunar_month, lunar_day, lunar_year_tail):
-    """根據農曆日期萃取相關的幸運號碼 (1~49)"""
-    candidates = set()
-    
-    # 1. 加入農曆月份與日期
-    if 1 <= lunar_month <= 49: candidates.add(lunar_month)
-    if 1 <= lunar_day <= 49: candidates.add(lunar_day)
-    
-    # 2. 加入年份的後兩碼 (例如丙午年對應2026，取 26)
-    if 1 <= lunar_year_tail <= 49: candidates.add(lunar_year_tail)
-    
-    # 3. 加入 農曆月份+日期 的總和
-    month_day_sum = lunar_month + lunar_day
-    if 1 <= month_day_sum <= 49: candidates.add(month_day_sum)
-    
-    return list(candidates)
-
-def generate_lunar_optimized_lotto(num_sets=1, lunar_month=1, lunar_day=1, lunar_year_tail=26):
-    """產生針對農曆日期優化的大樂透組合"""
-    results = []
-    lunar_candidates = get_lunar_lucky_numbers(lunar_month, lunar_day, lunar_year_tail)
-    
-    while len(results) < num_sets:
-        current_fixed = []
-        # 從農曆號碼池中，隨機挑選 1~2 個作為這組的靈感主號
-        if lunar_candidates:
-            pick_count = min(random.choice([1, 2]), len(lunar_candidates))
-            current_fixed = random.sample(lunar_candidates, pick_count)
+        <!-- 控制面板 -->
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 mb-8">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <!-- 農曆日期選擇 -->
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-2">農曆開獎日期</label>
+                    <div class="grid grid-cols-3 gap-2">
+                        <div>
+                            <input type="number" id="lunar-year" placeholder="年尾數" min="1" max="99" value="26" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400 outline-none transition-all text-center">
+                            <div class="text-[10px] text-slate-400 text-center mt-1">年份尾數 (例:26)</div>
+                        </div>
+                        <div>
+                            <input type="number" id="lunar-month" placeholder="月" min="1" max="12" value="9" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400 outline-none transition-all text-center">
+                            <div class="text-[10px] text-slate-400 text-center mt-1">農曆月</div>
+                        </div>
+                        <div>
+                            <input type="number" id="lunar-day" placeholder="日" min="1" max="30" value="29" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400 outline-none transition-all text-center">
+                            <div class="text-[10px] text-slate-400 text-center mt-1">農曆日</div>
+                        </div>
+                    </div>
+                </div>
+                <!-- 組數選擇 -->
+                <div>
+                    <label for="num-sets" class="block text-sm font-semibold text-slate-700 mb-2">產生組數</label>
+                    <input type="number" id="num-sets" min="1" max="20" value="4" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400 outline-none transition-all h-[42px]">
+                    <p class="text-xs text-slate-400 mt-1">建議範圍 1 到 20 組</p>
+                </div>
+            </div>
             
-        # 從剩餘的號碼池中抽出不足的數量
-        pool = [n for n in range(1, 50) if n not in current_fixed]
-        needed_count = 6 - len(current_fixed)
-        random_picks = random.sample(pool, needed_count)
-        
-        numbers = current_fixed + random_picks
-        numbers.sort()
-        
-        # 檢查是否符合統計過濾條件
-        if is_good_combination(numbers):
-            results.append((numbers, current_fixed))
-            
-    return results
+            <button id="generate-btn" class="w-full bg-gradient-to-r from-yellow-400 to-amber-500 hover:from-yellow-500 hover:to-amber-600 text-white font-bold py-3 px-6 rounded-xl shadow-md transform transition hover:-translate-y-0.5 active:translate-y-0">
+                ✨ 立即產生幸運號碼
+            </button>
+        </div>
 
-if __name__ == "__main__":
-    # 設定開獎當天的農曆日期資訊 (以2026年11月7日為例，農曆為九月廿九)
-    lunar_month = 9
-    lunar_day = 29
-    lunar_year_tail = 26  # 取 2026 的尾數
-    sets_to_generate = 4
-    
-    lunar_pool = get_lunar_lucky_numbers(lunar_month, lunar_day, lunar_year_tail)
-    lunar_pool.sort()
-    pool_str = ", ".join([f"{n:02d}" for n in lunar_pool])
-    
-    print(f"【農曆日期優化模式】")
-    print(f"目標農曆日期：{lunar_year_tail}年 {lunar_month}月 {lunar_day}日")
-    print(f"萃取出的農曆靈感號碼池：[{pool_str}]\n")
-    print(f"為您產生 {sets_to_generate} 組號碼：")
-    
-    smart_numbers = generate_lunar_optimized_lotto(sets_to_generate, lunar_month, lunar_day, lunar_year_tail)
-    
-    for i, (nums, anchors) in enumerate(smart_numbers, 1):
-        formatted_nums = ", ".join([f"{n:02d}" for n in nums])
-        
-        # 標示出這組選用了哪些農曆號碼
-        anchors.sort()
-        anchor_str = ", ".join([f"{n:02d}" for n in anchors])
-        
-        print(f"第 {i} 組: {formatted_nums} (總和: {sum(nums):3d} | 農曆牌: {anchor_str})")
+        <!-- 萃取結果提示 -->
+        <div id="date-pool-info" class="text-center mb-6 hidden">
+            <span class="inline-block bg-amber-100 text-amber-800 text-sm font-semibold px-4 py-1.5 rounded-full shadow-sm border border-amber-200">
+                ⛩️ 農曆靈感牌池: <span id="pool-numbers" class="tracking-wider"></span>
+            </span>
+        </div>
+
+        <!-- 結果展示區 -->
+        <div id="results-container" class="space-y-4">
+            <!-- 產生的號碼會動態插入在這裡 -->
+        </div>
+    </div>
+
+    <script>
+        // 檢查組合是否符合統計學標準
+        function isGoodCombination(numbers) {
+            // 1. 總和落點 (115 到 185)
+            const sum = numbers.reduce((a, b) => a + b, 0);
+            if (sum < 115 || sum > 185) return false;
+
+            // 2. 奇偶比例。奇數數量只能是 2, 3, 或 4 個
+            const oddCount = numbers.filter(n => n % 2 !== 0).length;
+            if (![2, 3, 4].includes(oddCount)) return false;
+
+            // 3. 大小區間平衡。1-24為小區，25-49為大區
+            const highCount = numbers.filter(n => n >= 25).length;
+            if (![2, 3, 4].includes(highCount)) return false;
+
+            return true;
+        }
+
+        // 根據農曆萃取潛在幸運號碼
+        function getLunarLuckyNumbers(year, month, day) {
+            const candidates = new Set();
+            
+            if (month >= 1 && month <= 49) candidates.add(month);
+            if (day >= 1 && day <= 49) candidates.add(day);
+            if (year >= 1 && year <= 49) candidates.add(year);
+            
+            const sumMD = month + day;
+            if (sumMD >= 1 && sumMD <= 49) candidates.add(sumMD);
+            
+            return Array.from(candidates).sort((a, b) => a - b);
+        }
+
+        // 產生一組陣列並洗牌
+        function shuffle(array) {
+            let currentIndex = array.length, randomIndex;
+            while (currentIndex !== 0) {
+                randomIndex = Math.floor(Math.random() * currentIndex);
+                currentIndex--;
+                [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+            }
+            return array;
+        }
+
+        // 產生號碼主邏輯
+        function generateLottoSets(numSets, year, month, day) {
+            const results = [];
+            const lunarCandidates = getLunarLuckyNumbers(year, month, day);
+            
+            // 安全機制：避免無窮迴圈，設定最大嘗試次數
+            let maxAttempts = numSets * 500; 
+            let attempts = 0;
+
+            while (results.length < numSets && attempts < maxAttempts) {
+                attempts++;
+                let currentFixed = [];
+                
+                // 隨機從農曆靈感中挑選 1~2 個數字
+                if (lunarCandidates.length > 0) {
+                    const pickCount = Math.min(Math.floor(Math.random() * 2) + 1, lunarCandidates.length);
+                    const shuffledCandidates = shuffle([...lunarCandidates]);
+                    currentFixed = shuffledCandidates.slice(0, pickCount);
+                }
+                
+                // 建立 1~49 的號碼池，並排除已經被挑選的固定號碼
+                let pool = [];
+                for (let i = 1; i <= 49; i++) {
+                    if (!currentFixed.includes(i)) {
+                        pool.push(i);
+                    }
+                }
+                
+                // 補齊剩下的號碼
+                const neededCount = 6 - currentFixed.length;
+                const shuffledPool = shuffle([...pool]);
+                const randomPicks = shuffledPool.slice(0, neededCount);
+                
+                // 合併並排序
+                const numbers = [...currentFixed, ...randomPicks].sort((a, b) => a - b);
+                
+                // 檢驗是否為黃金比例組合
+                if (isGoodCombination(numbers)) {
+                    results.push({
+                        numbers: numbers,
+                        anchors: currentFixed.sort((a, b) => a - b),
+                        sum: numbers.reduce((a, b) => a + b, 0)
+                    });
+                }
+            }
+            return { results, lunarCandidates };
+        }
+
+        // 補零函數
+        function padZero(num) {
+            return num.toString().padStart(2, '0');
+        }
+
+        // 綁定按鈕事件
+        document.getElementById('generate-btn').addEventListener('click', () => {
+            const year = parseInt(document.getElementById('lunar-year').value, 10) || 0;
+            const month = parseInt(document.getElementById('lunar-month').value, 10) || 0;
+            const day = parseInt(document.getElementById('lunar-day').value, 10) || 0;
+            let numSets = parseInt(document.getElementById('num-sets').value, 10);
+            
+            if (isNaN(numSets) || numSets < 1) numSets = 4;
+            if (numSets > 20) numSets = 20; // 防止產生過多當機
+
+            const container = document.getElementById('results-container');
+            const infoBox = document.getElementById('date-pool-info');
+            const poolSpan = document.getElementById('pool-numbers');
+            
+            // 清空舊結果
+            container.innerHTML = '';
+            
+            // 產生號碼
+            const { results, lunarCandidates } = generateLottoSets(numSets, year, month, day);
+
+            // 顯示農曆牌池資訊
+            if (lunarCandidates.length > 0) {
+                poolSpan.textContent = lunarCandidates.map(padZero).join(', ');
+                infoBox.classList.remove('hidden');
+            } else {
+                infoBox.classList.add('hidden');
+            }
+            
+            if (results.length === 0) {
+                container.innerHTML = '<div class="text-center text-slate-500 py-4">無法產生符合條件的號碼，請稍微調整日期或再試一次。</div>';
+                return;
+            }
+
+            // 渲染結果
+            results.forEach((set, index) => {
+                const card = document.createElement('div');
+                // 加入 fade-in 動畫，並設定延遲使其有層次感
+                card.className = `bg-white rounded-xl shadow-sm border border-slate-100 p-5 flex flex-col md:flex-row items-center justify-between gap-4 fade-in`;
+                card.style.animationDelay = `${index * 0.1}s`;
+                
+                // 號碼球區域
+                const ballsHtml = set.numbers.map(n => {
+                    const isAnchor = set.anchors.includes(n);
+                    const borderClass = isAnchor ? 'border-amber-600 border-2' : 'border-2 border-yellow-500';
+                    return `<div class="lotto-ball w-12 h-12 rounded-full flex items-center justify-center font-bold text-slate-800 text-lg ${borderClass}">${padZero(n)}</div>`;
+                }).join('');
+
+                const anchorStr = set.anchors.length > 0 
+                    ? set.anchors.map(padZero).join(', ') 
+                    : '純隨機';
+
+                card.innerHTML = `
+                    <div class="flex items-center gap-4 w-full md:w-auto">
+                        <span class="text-slate-400 font-bold text-lg w-6 text-center">${index + 1}</span>
+                        <div class="flex flex-wrap gap-2 justify-center">
+                            ${ballsHtml}
+                        </div>
+                    </div>
+                    <div class="flex flex-row md:flex-col items-center md:items-end justify-between md:justify-center gap-2 text-sm text-slate-500 w-full md:w-auto bg-slate-50 p-3 
