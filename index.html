@@ -3,32 +3,50 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>大樂透智慧選號器 - 農曆版</title>
+    <title>大樂透選號程式</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap');
         
         body {
-            font-family: 'Inter', sans-serif;
+            font-family: 'Noto Sans TC', sans-serif;
+            background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%);
+            min-height: 100vh;
         }
 
-        /* 彩球立體質感 */
-        .lotto-ball {
-            background: radial-gradient(circle at 30% 30%, #fef08a, #eab308 70%, #a16207);
-            text-shadow: 1px 1px 0px rgba(255,255,255,0.5);
-            box-shadow: 
-                inset -2px -2px 6px rgba(0,0,0,0.2),
-                inset 2px 2px 6px rgba(255,255,255,0.7),
-                2px 4px 5px rgba(0,0,0,0.15);
+        .ball {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1.125rem;
+            color: white;
+            box-shadow: inset -2px -2px 6px rgba(0,0,0,0.2), 2px 2px 5px rgba(0,0,0,0.1);
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+            transition: transform 0.2s;
         }
         
-        .fade-in {
-            animation: fadeIn 0.5s ease-out forwards;
-            opacity: 0;
-            transform: translateY(10px);
+        .ball:hover {
+            transform: scale(1.1);
         }
 
-        @keyframes fadeIn {
+        /* 根據數字區間給予不同顏色的彩球 */
+        .ball-yellow { background: radial-gradient(circle at 30% 30%, #ffd54f, #ffb300); }
+        .ball-blue { background: radial-gradient(circle at 30% 30%, #64b5f6, #1e88e5); }
+        .ball-red { background: radial-gradient(circle at 30% 30%, #e57373, #e53935); }
+        .ball-green { background: radial-gradient(circle at 30% 30%, #81c784, #43a047); }
+        .ball-purple { background: radial-gradient(circle at 30% 30%, #ba68c8, #8e24aa); }
+        
+        .result-card {
+            animation: slideUp 0.5s ease-out forwards;
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        @keyframes slideUp {
             to {
                 opacity: 1;
                 transform: translateY(0);
@@ -36,225 +54,163 @@
         }
     </style>
 </head>
-<body class="bg-slate-50 min-h-screen p-4 sm:p-8">
+<body class="p-6 md:p-12 text-gray-800">
 
-    <div class="max-w-3xl mx-auto">
-        <!-- 標題區 -->
+    <div class="max-w-4xl mx-auto">
         <header class="text-center mb-10">
-            <h1 class="text-4xl font-extrabold text-slate-800 mb-2 tracking-tight">大樂透智慧選號</h1>
-            <p class="text-slate-500">結合「統計學過濾」與「農曆日期靈感」的選號神器</p>
+            <h1 class="text-4xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-red-600 to-yellow-500 mb-4 drop-shadow-sm">
+                大樂透幸運選號機
+            </h1>
+            <p class="text-gray-600">透過統計學常態分佈過濾，為您產生最佳組合</p>
         </header>
 
-        <!-- 控制面板 -->
-        <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 mb-8">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                <!-- 農曆日期選擇 -->
-                <div>
-                    <label class="block text-sm font-semibold text-slate-700 mb-2">農曆開獎日期</label>
-                    <div class="grid grid-cols-3 gap-2">
-                        <div>
-                            <input type="number" id="lunar-year" placeholder="年尾數" min="1" max="99" value="26" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400 outline-none transition-all text-center">
-                            <div class="text-[10px] text-slate-400 text-center mt-1">年份尾數 (例:26)</div>
-                        </div>
-                        <div>
-                            <input type="number" id="lunar-month" placeholder="月" min="1" max="12" value="9" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400 outline-none transition-all text-center">
-                            <div class="text-[10px] text-slate-400 text-center mt-1">農曆月</div>
-                        </div>
-                        <div>
-                            <input type="number" id="lunar-day" placeholder="日" min="1" max="30" value="29" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400 outline-none transition-all text-center">
-                            <div class="text-[10px] text-slate-400 text-center mt-1">農曆日</div>
-                        </div>
+        <main class="grid md:grid-cols-3 gap-8">
+            <!-- 左側控制面板 -->
+            <div class="bg-white rounded-2xl shadow-xl p-6 md:col-span-1 h-fit border border-gray-100">
+                <h2 class="text-xl font-bold mb-6 text-gray-700 flex items-center border-b pb-3">
+                    <svg class="w-6 h-6 mr-2 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
+                    選號設定
+                </h2>
+                
+                <div class="mb-8">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">產生組數</label>
+                    <select id="numSets" class="w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-red-500 focus:border-red-500 block p-2.5 outline-none transition-colors">
+                        <option value="1">1 組</option>
+                        <option value="2">2 組</option>
+                        <option value="3">3 組</option>
+                        <option value="4" selected>4 組</option>
+                        <option value="5">5 組</option>
+                        <option value="10">10 組</option>
+                    </select>
+                </div>
+
+                <div class="mb-6 p-4 bg-red-50 rounded-lg text-sm text-red-800 leading-relaxed border border-red-100">
+                    <p class="font-bold mb-1">過濾策略啟用中：</p>
+                    <ul class="list-disc pl-5 space-y-1">
+                        <li>總和落點限制 (115-185)</li>
+                        <li>奇偶數平衡配置</li>
+                        <li>大小號碼區間平衡</li>
+                    </ul>
+                </div>
+
+                <button onclick="generateNumbers()" class="w-full text-white bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 focus:ring-4 focus:outline-none focus:ring-red-300 font-bold rounded-lg text-lg px-5 py-3.5 text-center transition-all shadow-lg transform hover:-translate-y-0.5">
+                    產生幸運號碼
+                </button>
+            </div>
+
+            <!-- 右側結果展示區 -->
+            <div class="md:col-span-2">
+                <div id="resultsContainer" class="space-y-4">
+                    <!-- 產生的結果會插入這裡 -->
+                    <div class="flex items-center justify-center h-64 bg-white/50 rounded-2xl border-2 border-dashed border-gray-300 text-gray-400">
+                        點擊左側按鈕開始產生選號
                     </div>
                 </div>
-                <!-- 組數選擇 -->
-                <div>
-                    <label for="num-sets" class="block text-sm font-semibold text-slate-700 mb-2">產生組數</label>
-                    <input type="number" id="num-sets" min="1" max="20" value="4" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400 outline-none transition-all h-[42px]">
-                    <p class="text-xs text-slate-400 mt-1">建議範圍 1 到 20 組</p>
-                </div>
             </div>
-            
-            <button id="generate-btn" class="w-full bg-gradient-to-r from-yellow-400 to-amber-500 hover:from-yellow-500 hover:to-amber-600 text-white font-bold py-3 px-6 rounded-xl shadow-md transform transition hover:-translate-y-0.5 active:translate-y-0">
-                ✨ 立即產生幸運號碼
-            </button>
-        </div>
-
-        <!-- 萃取結果提示 -->
-        <div id="date-pool-info" class="text-center mb-6 hidden">
-            <span class="inline-block bg-amber-100 text-amber-800 text-sm font-semibold px-4 py-1.5 rounded-full shadow-sm border border-amber-200">
-                ⛩️ 農曆靈感牌池: <span id="pool-numbers" class="tracking-wider"></span>
-            </span>
-        </div>
-
-        <!-- 結果展示區 -->
-        <div id="results-container" class="space-y-4">
-            <!-- 產生的號碼會動態插入在這裡 -->
-        </div>
+        </main>
+        
+        <footer class="text-center mt-12 text-sm text-gray-500">
+            <p>※ 選號結果僅供娛樂與參考，不保證中獎。您可以將結果保存在名為 <span class="font-bold text-gray-700">其他</span> 的檔案中備查。</p>
+        </footer>
     </div>
 
     <script>
-        // 檢查組合是否符合統計學標準
+        // 取得彩球顏色
+        function getBallColorClass(num) {
+            if (num <= 9) return 'ball-yellow';
+            if (num <= 19) return 'ball-blue';
+            if (num <= 29) return 'ball-red';
+            if (num <= 39) return 'ball-green';
+            return 'ball-purple';
+        }
+
+        // 檢查號碼組合是否符合統計分佈
         function isGoodCombination(numbers) {
-            // 1. 總和落點 (115 到 185)
+            // 條件 1：總和落點 (115 到 185)
             const sum = numbers.reduce((a, b) => a + b, 0);
             if (sum < 115 || sum > 185) return false;
 
-            // 2. 奇偶比例。奇數數量只能是 2, 3, 或 4 個
+            // 條件 2：奇偶比例 (2, 3, 或 4 個奇數)
             const oddCount = numbers.filter(n => n % 2 !== 0).length;
-            if (![2, 3, 4].includes(oddCount)) return false;
+            if (oddCount < 2 || oddCount > 4) return false;
 
-            // 3. 大小區間平衡。1-24為小區，25-49為大區
+            // 條件 3：大小區間平衡 (大於等於25的數量為 2, 3, 或 4 個)
             const highCount = numbers.filter(n => n >= 25).length;
-            if (![2, 3, 4].includes(highCount)) return false;
+            if (highCount < 2 || highCount > 4) return false;
 
             return true;
         }
 
-        // 根據農曆萃取潛在幸運號碼
-        function getLunarLuckyNumbers(year, month, day) {
-            const candidates = new Set();
-            
-            if (month >= 1 && month <= 49) candidates.add(month);
-            if (day >= 1 && day <= 49) candidates.add(day);
-            if (year >= 1 && year <= 49) candidates.add(year);
-            
-            const sumMD = month + day;
-            if (sumMD >= 1 && sumMD <= 49) candidates.add(sumMD);
-            
-            return Array.from(candidates).sort((a, b) => a - b);
-        }
-
-        // 產生一組陣列並洗牌
-        function shuffle(array) {
-            let currentIndex = array.length, randomIndex;
-            while (currentIndex !== 0) {
-                randomIndex = Math.floor(Math.random() * currentIndex);
-                currentIndex--;
-                [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
-            }
-            return array;
+        // 產生不重複的隨機號碼
+        function getRandomNumbers(count, pool) {
+            const shuffled = [...pool].sort(() => 0.5 - Math.random());
+            return shuffled.slice(0, count);
         }
 
         // 產生號碼主邏輯
-        function generateLottoSets(numSets, year, month, day) {
+        function generateSmartLotto(numSets) {
             const results = [];
-            const lunarCandidates = getLunarLuckyNumbers(year, month, day);
-            
-            // 安全機制：避免無窮迴圈，設定最大嘗試次數
-            let maxAttempts = numSets * 500; 
-            let attempts = 0;
+            const allNumbers = Array.from({length: 49}, (_, i) => i + 1);
 
-            while (results.length < numSets && attempts < maxAttempts) {
-                attempts++;
-                let currentFixed = [];
+            while (results.length < numSets) {
+                // 從 1-49 隨機選出 6 個
+                const picks = getRandomNumbers(6, allNumbers);
+                picks.sort((a, b) => a - b);
                 
-                // 隨機從農曆靈感中挑選 1~2 個數字
-                if (lunarCandidates.length > 0) {
-                    const pickCount = Math.min(Math.floor(Math.random() * 2) + 1, lunarCandidates.length);
-                    const shuffledCandidates = shuffle([...lunarCandidates]);
-                    currentFixed = shuffledCandidates.slice(0, pickCount);
-                }
-                
-                // 建立 1~49 的號碼池，並排除已經被挑選的固定號碼
-                let pool = [];
-                for (let i = 1; i <= 49; i++) {
-                    if (!currentFixed.includes(i)) {
-                        pool.push(i);
-                    }
-                }
-                
-                // 補齊剩下的號碼
-                const neededCount = 6 - currentFixed.length;
-                const shuffledPool = shuffle([...pool]);
-                const randomPicks = shuffledPool.slice(0, neededCount);
-                
-                // 合併並排序
-                const numbers = [...currentFixed, ...randomPicks].sort((a, b) => a - b);
-                
-                // 檢驗是否為黃金比例組合
-                if (isGoodCombination(numbers)) {
-                    results.push({
-                        numbers: numbers,
-                        anchors: currentFixed.sort((a, b) => a - b),
-                        sum: numbers.reduce((a, b) => a + b, 0)
-                    });
+                // 檢查是否符合過濾條件
+                if (isGoodCombination(picks)) {
+                    results.push(picks);
                 }
             }
-            return { results, lunarCandidates };
+            return results;
         }
 
-        // 補零函數
-        function padZero(num) {
-            return num.toString().padStart(2, '0');
-        }
-
-        // 綁定按鈕事件
-        document.getElementById('generate-btn').addEventListener('click', () => {
-            const year = parseInt(document.getElementById('lunar-year').value, 10) || 0;
-            const month = parseInt(document.getElementById('lunar-month').value, 10) || 0;
-            const day = parseInt(document.getElementById('lunar-day').value, 10) || 0;
-            let numSets = parseInt(document.getElementById('num-sets').value, 10);
+        // 點擊按鈕執行
+        function generateNumbers() {
+            const numSets = parseInt(document.getElementById('numSets').value);
+            const container = document.getElementById('resultsContainer');
             
-            if (isNaN(numSets) || numSets < 1) numSets = 4;
-            if (numSets > 20) numSets = 20; // 防止產生過多當機
-
-            const container = document.getElementById('results-container');
-            const infoBox = document.getElementById('date-pool-info');
-            const poolSpan = document.getElementById('pool-numbers');
-            
-            // 清空舊結果
+            // 清空容器
             container.innerHTML = '';
             
             // 產生號碼
-            const { results, lunarCandidates } = generateLottoSets(numSets, year, month, day);
-
-            // 顯示農曆牌池資訊
-            if (lunarCandidates.length > 0) {
-                poolSpan.textContent = lunarCandidates.map(padZero).join(', ');
-                infoBox.classList.remove('hidden');
-            } else {
-                infoBox.classList.add('hidden');
-            }
+            const lottoResults = generateSmartLotto(numSets);
             
-            if (results.length === 0) {
-                container.innerHTML = '<div class="text-center text-slate-500 py-4">無法產生符合條件的號碼，請稍微調整日期或再試一次。</div>';
-                return;
-            }
-
-            // 渲染結果
-            results.forEach((set, index) => {
+            // 渲染畫面
+            lottoResults.forEach((nums, index) => {
+                const totalSum = nums.reduce((a, b) => a + b, 0);
+                
+                // 建立卡片
                 const card = document.createElement('div');
-                // 加入 fade-in 動畫，並設定延遲使其有層次感
-                card.className = `bg-white rounded-xl shadow-sm border border-slate-100 p-5 flex flex-col md:flex-row items-center justify-between gap-4 fade-in`;
+                card.className = 'bg-white rounded-2xl shadow-md p-5 border border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between result-card';
                 card.style.animationDelay = `${index * 0.1}s`;
                 
-                // 號碼球區域
-                const ballsHtml = set.numbers.map(n => {
-                    const isAnchor = set.anchors.includes(n);
-                    const borderClass = isAnchor ? 'border-amber-600 border-2' : 'border-2 border-yellow-500';
-                    return `<div class="lotto-ball w-12 h-12 rounded-full flex items-center justify-center font-bold text-slate-800 text-lg ${borderClass}">${padZero(n)}</div>`;
-                }).join('');
-
-                const anchorStr = set.anchors.length > 0 
-                    ? set.anchors.map(padZero).join(', ') 
-                    : '純隨機';
-
-                card.innerHTML = `
-                    <div class="flex items-center gap-4 w-full md:w-auto">
-                        <span class="text-slate-400 font-bold text-lg w-6 text-center">${index + 1}</span>
-                        <div class="flex flex-wrap gap-2 justify-center">
-                            ${ballsHtml}
-                        </div>
-                    </div>
-                    <div class="flex flex-row md:flex-col items-center md:items-end justify-between md:justify-center gap-2 text-sm text-slate-500 w-full md:w-auto bg-slate-50 p-3 md:bg-transparent rounded-lg">
-                        <div>總和: <span class="font-semibold text-slate-700">${set.sum}</span></div>
-                        <div>農曆牌: <span class="font-semibold text-amber-600">${anchorStr}</span></div>
-                    </div>
+                // 左側標籤與總和
+                const infoDiv = document.createElement('div');
+                infoDiv.className = 'mb-4 sm:mb-0 text-center sm:text-left';
+                infoDiv.innerHTML = `
+                    <div class="text-sm font-bold text-gray-500 mb-1">第 ${index + 1} 組</div>
+                    <div class="text-xs text-gray-400 bg-gray-50 inline-block px-2 py-1 rounded">總和: ${totalSum}</div>
                 `;
                 
+                // 右側彩球區
+                const ballsDiv = document.createElement('div');
+                ballsDiv.className = 'flex gap-2 justify-center sm:justify-end flex-wrap';
+                
+                nums.forEach(num => {
+                    const formattedNum = num.toString().padStart(2, '0');
+                    const colorClass = getBallColorClass(num);
+                    const ball = document.createElement('div');
+                    ball.className = `ball ${colorClass}`;
+                    ball.textContent = formattedNum;
+                    ballsDiv.appendChild(ball);
+                });
+                
+                card.appendChild(infoDiv);
+                card.appendChild(ballsDiv);
                 container.appendChild(card);
             });
-        });
+        }
     </script>
 </body>
 </html>
